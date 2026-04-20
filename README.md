@@ -140,10 +140,10 @@ config/custom_components/openwrt_control/
 
 Значения по умолчанию:
 
-- `host`: `10.0.1.2`
-- `port`: `80`
-- `use_https`: `false`
-- `verify_ssl`: `false`
+- `host`: `owrt.frolkin.com`
+- `port`: `443`
+- `use_https`: `true`
+- `verify_ssl`: `true`
 - `scan_interval`: `30`
 
 После успешной настройки интеграция логинится через `session.login`, переиспользует ubus session и при ошибке авторизации пытается перелогиниться.
@@ -184,7 +184,9 @@ Buttons:
 - `button.openwrt_restart_vds_openconnect`
 - `button.openwrt_reboot`
 
-Кнопку `reboot` лучше использовать не напрямую из UI, а через Home Assistant script с подтверждением.
+Кнопка `reboot` сохраняется как отдельная сущность, но по умолчанию отключена в entity registry. Это сделано намеренно, потому что действие потенциально опасное и легко оборвать себе доступ к роутеру в неподходящий момент.
+
+Даже после ручного включения кнопку `reboot` лучше использовать не напрямую из UI, а через Home Assistant script с подтверждением.
 
 Пример script:
 
@@ -211,7 +213,8 @@ script:
 Если не видно VPN/IP/service states:
 
 - проверьте, что интерфейс называется именно `vds_frolkin`;
-- проверьте, что процесс действительно определяется через `pgrep -f passwall2`, `pgrep -f xray`, `pgrep -f dnsmasq`;
+- проверьте, что `passwall2` и `dnsmasq` возвращают `running` через свои init.d scripts;
+- проверьте, что `xray` действительно запущен именно из `/tmp/etc/passwall2/bin/xray`;
 - проверьте вывод `ubus call network.interface.vds_frolkin status`.
 
 Если кнопки завершаются ошибкой:
