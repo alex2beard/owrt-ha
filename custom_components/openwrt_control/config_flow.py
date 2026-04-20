@@ -52,6 +52,12 @@ async def _async_validate_input(hass, user_input: dict[str, Any]) -> dict[str, s
     return {"title": str(title)}
 
 
+def _build_unique_id(host: str, port: int, use_https: bool) -> str:
+    """Build a stable unique id for an OpenWrt endpoint."""
+    scheme = "https" if use_https else "http"
+    return f"{scheme}://{host}:{port}"
+
+
 class OpenWrtControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenWrt Control."""
 
@@ -70,7 +76,7 @@ class OpenWrtControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            unique_id = self._build_unique_id(
+            unique_id = _build_unique_id(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
                 user_input[CONF_USE_HTTPS],
@@ -98,12 +104,6 @@ class OpenWrtControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=self._get_schema(user_input),
             errors=errors,
         )
-
-    @staticmethod
-    def _build_unique_id(host: str, port: int, use_https: bool) -> str:
-        """Build a stable unique id for the config entry."""
-        scheme = "https" if use_https else "http"
-        return f"{scheme}://{host}:{port}"
 
     @staticmethod
     def _get_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -157,10 +157,23 @@ class OpenWrtControlOptionsFlow(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            merged_input = {**self._config_entry.data, **self._config_entry.options, **user_input}
+            new_unique_id = _build_unique_id(
+                merged_input[CONF_HOST],
+                merged_input[CONF_PORT],
+                merged_input[CONF_USE_HTTPS],
+            )
+
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.entry_id == self._config_entry.entry_id:
+                    continue
+                if entry.unique_id == new_unique_id:
+                    return self.async_abort(reason="already_configured")
+
             try:
                 await _async_validate_input(
                     self.hass,
-                    {**self._config_entry.data, **user_input},
+                    merged_input,
                 )
             except OpenWrtAuthError:
                 errors["base"] = "invalid_auth"
@@ -172,6 +185,10 @@ class OpenWrtControlOptionsFlow(config_entries.OptionsFlow):
                 )
                 errors["base"] = "unknown"
             else:
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry,
+                    unique_id=new_unique_id,
+                )
                 return self.async_create_entry(title="", data=user_input)
 
         current = {**self._config_entry.data, **self._config_entry.options}
