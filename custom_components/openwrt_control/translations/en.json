@@ -1,0 +1,126 @@
+{
+  "title": "OpenWrt Control",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to OpenWrt",
+        "description": "Configure OpenWrt access over the LuCI ubus endpoint.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "use_https": "Use HTTPS",
+          "verify_ssl": "Verify SSL certificate",
+          "username": "Username",
+          "password": "Password",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to OpenWrt",
+      "invalid_auth": "Invalid username, password, or rpcd ACL",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This OpenWrt endpoint is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenWrt Control options",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "use_https": "Use HTTPS",
+          "verify_ssl": "Verify SSL certificate",
+          "username": "Username",
+          "password": "Password",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to OpenWrt",
+      "invalid_auth": "Invalid username, password, or rpcd ACL",
+      "unknown": "Unexpected error"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "online": {
+        "name": "OpenWrt online"
+      },
+      "wan_up": {
+        "name": "WAN up"
+      },
+      "vds_openconnect_up": {
+        "name": "VDS OpenConnect up"
+      },
+      "passwall2_running": {
+        "name": "PassWall2 running"
+      },
+      "xray_running": {
+        "name": "Xray running"
+      },
+      "dnsmasq_running": {
+        "name": "dnsmasq running"
+      }
+    },
+    "sensor": {
+      "hostname": {
+        "name": "Hostname"
+      },
+      "version": {
+        "name": "Version"
+      },
+      "kernel": {
+        "name": "Kernel"
+      },
+      "model": {
+        "name": "Model"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "load_1m": {
+        "name": "Load 1m"
+      },
+      "load_5m": {
+        "name": "Load 5m"
+      },
+      "load_15m": {
+        "name": "Load 15m"
+      },
+      "memory_available": {
+        "name": "Memory available"
+      },
+      "lan_ip": {
+        "name": "LAN IP"
+      },
+      "wan_ip": {
+        "name": "WAN IP"
+      },
+      "vds_openconnect_ip": {
+        "name": "VDS OpenConnect IP"
+      }
+    },
+    "button": {
+      "restart_passwall2": {
+        "name": "Restart PassWall2"
+      },
+      "restart_dnsmasq": {
+        "name": "Restart dnsmasq"
+      },
+      "reload_firewall": {
+        "name": "Reload firewall"
+      },
+      "restart_vds_openconnect": {
+        "name": "Restart VDS OpenConnect"
+      },
+      "reboot": {
+        "name": "Reboot OpenWrt"
+      }
+    }
+  }
+}
