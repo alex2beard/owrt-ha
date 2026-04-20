@@ -32,18 +32,35 @@
 
 Отдельно: `device_tracker` не реализован намеренно. Wi-Fi-клиенты не отслеживаются. Интеграция ориентирована на OpenWrt x86/router без Wi-Fi.
 
-## 4. Установка OpenWrt-side rpcd plugin
+## 4. Установка через HACS
 
-В репозитории есть две OpenWrt-side части:
+Для установки через HACS репозиторий должен быть добавлен как custom repository типа `Integration`.
 
-- [`openwrt/rpcd/openwrt-ha`](openwrt/rpcd/openwrt-ha)
-- [`openwrt/acl/openwrt-ha.json`](openwrt/acl/openwrt-ha.json)
+Важно: по документации HACS private GitHub repositories не поддерживаются вообще. Для установки через HACS этот репозиторий должен быть public.
+
+После установки через HACS integration окажется в Home Assistant по пути:
+
+```text
+config/custom_components/openwrt_control/
+```
+
+OpenWrt-side файлы будут находиться внутри установленной интеграции:
+
+- `config/custom_components/openwrt_control/openwrt/rpcd/openwrt-ha`
+- `config/custom_components/openwrt_control/openwrt/acl/openwrt-ha.json`
+
+## 5. Установка OpenWrt-side rpcd plugin
+
+В репозитории и в установленной HACS-версии есть две OpenWrt-side части:
+
+- [`custom_components/openwrt_control/openwrt/rpcd/openwrt-ha`](custom_components/openwrt_control/openwrt/rpcd/openwrt-ha)
+- [`custom_components/openwrt_control/openwrt/acl/openwrt-ha.json`](custom_components/openwrt_control/openwrt/acl/openwrt-ha.json)
 
 Скопируйте их на роутер:
 
 ```sh
-scp openwrt/rpcd/openwrt-ha root@10.0.1.2:/tmp/openwrt-ha
-scp openwrt/acl/openwrt-ha.json root@10.0.1.2:/tmp/openwrt-ha.json
+scp custom_components/openwrt_control/openwrt/rpcd/openwrt-ha root@10.0.1.2:/tmp/openwrt-ha
+scp custom_components/openwrt_control/openwrt/acl/openwrt-ha.json root@10.0.1.2:/tmp/openwrt-ha.json
 ```
 
 Установите rpcd plugin и ACL:
@@ -64,7 +81,7 @@ ubus -v list openwrt.ha
 ubus call openwrt.ha status
 ```
 
-## 5. Создание пользователя `hass` и выдача ACL
+## 6. Создание пользователя `hass` и выдача ACL
 
 По документации OpenWrt ACL для HTTP ubus задаются в `/usr/share/rpcd/acl.d/*.json`, а привязка логина к ACL-ролям делается через `/etc/config/rpcd`.
 
@@ -100,7 +117,7 @@ curl -s http://10.0.1.2/ubus \
 
 Если в ответе есть `ubus_rpc_session`, значит авторизация и ACL-связка настроены корректно.
 
-## 6. Установка HA custom component
+## 7. Установка HA custom component
 
 Скопируйте каталог [`custom_components/openwrt_control`](custom_components/openwrt_control) в директорию `config/custom_components/` Home Assistant.
 
@@ -112,7 +129,7 @@ config/custom_components/openwrt_control/
 
 После копирования перезапустите Home Assistant.
 
-## 7. Настройка через UI
+## 8. Настройка через UI
 
 В Home Assistant:
 
@@ -131,7 +148,7 @@ config/custom_components/openwrt_control/
 
 После успешной настройки интеграция логинится через `session.login`, переиспользует ubus session и при ошибке авторизации пытается перелогиниться.
 
-## 8. Пример entities
+## 9. Пример entities
 
 Создаются следующие сущности.
 
@@ -181,7 +198,7 @@ script:
           entity_id: button.openwrt_reboot
 ```
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 Если интеграция не подключается:
 
@@ -202,3 +219,12 @@ script:
 - смотрите логи Home Assistant;
 - проверьте, что соответствующие команды на роутере выполняются вручную;
 - проверьте, что ACL установлен именно из `openwrt-ha.json`.
+
+## 11. CI и проверка репозитория
+
+В репозитории добавлены workflow-файлы:
+
+- `.github/workflows/validate.yml` для HACS validation;
+- `.github/workflows/hassfest.yml` для Home Assistant `hassfest`.
+
+Это даёт базовую автоматическую проверку структуры integration-репозитория и метаданных Home Assistant.
