@@ -37,6 +37,7 @@ class OpenWrtButtonEntityDescription(ButtonEntityDescription):
     """Describe an OpenWrt button entity."""
 
     press_fn: Callable[[OpenWrtControlRuntimeData], Awaitable[dict[str, Any]]]
+    enabled_by_default: bool = True
     refresh_after_press: bool = True
 
 
@@ -78,6 +79,7 @@ BUTTON_DESCRIPTIONS: tuple[OpenWrtButtonEntityDescription, ...] = (
         press_fn=lambda runtime_data: runtime_data.client.async_reboot(),
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
+        enabled_by_default=False,
         refresh_after_press=False,
         icon="mdi:power-cycle",
     ),
@@ -115,6 +117,7 @@ class OpenWrtButton(CoordinatorEntity, ButtonEntity):
         self._entry = entry
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_entity_registry_enabled_default = description.enabled_by_default
 
     @property
     def device_info(self) -> DeviceInfo:
