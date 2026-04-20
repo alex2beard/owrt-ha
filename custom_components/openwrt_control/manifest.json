@@ -1,10 +1,18 @@
 {
   "domain": "openwrt_control",
   "name": "OpenWrt Control",
-  "codeowners": [],
+  "codeowners": [
+    "@alex2beard"
+  ],
   "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/alex2beard/owrt-ha#readme",
   "integration_type": "hub",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/alex2beard/owrt-ha/issues",
+  "loggers": [
+    "custom_components.openwrt_control"
+  ],
   "requirements": [],
   "version": "0.1.0"
 }
