@@ -6,7 +6,7 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/alex2beard/owrt-ha#readme",
+  "documentation": "https://github.com/alex2beard/owrt-ha",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/alex2beard/owrt-ha/issues",
