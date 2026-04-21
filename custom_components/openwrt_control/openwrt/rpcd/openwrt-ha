@@ -27,7 +27,7 @@ normalize_bool() {
 normalize_load() {
     local raw="${1:-0}"
 
-    awk -v value="$raw" 'BEGIN { printf "%.2f", value / 65536 }'
+    awk -v value="$raw" 'BEGIN { printf "%.6f", value / 65536 }'
 }
 
 safe_json() {
@@ -82,7 +82,6 @@ render_status() {
     local mem_available
     local mem_buffered
     local mem_cached
-    local load_json
 
     board_json="$(safe_json ubus call system board)"
     info_json="$(safe_json ubus call system info)"
@@ -107,7 +106,6 @@ render_status() {
     [ -n "$mem_total" ] || mem_total=0
     [ -n "$mem_free" ] || mem_free=0
     [ -n "$mem_available" ] || mem_available=$(( ${mem_free:-0} + ${mem_buffered:-0} + ${mem_cached:-0} ))
-    load_json="$(printf '[%s,%s,%s]' "$(normalize_load "$load1_raw")" "$(normalize_load "$load5_raw")" "$(normalize_load "$load15_raw")")"
 
     json_init
 
@@ -118,6 +116,9 @@ render_status() {
     [ -n "$version" ] && json_add_string "version" "$version" || json_add_string "version" ""
     json_add_int "uptime" "$uptime"
     json_add_array "load"
+    json_add_double "" "$(normalize_load "$load1_raw")"
+    json_add_double "" "$(normalize_load "$load5_raw")"
+    json_add_double "" "$(normalize_load "$load15_raw")"
     json_close_array
     json_add_object "memory"
     json_add_int "total" "$mem_total"
@@ -144,7 +145,7 @@ render_status() {
     json_close_object
     json_close_object
 
-    json_dump | sed "s/\"load\":\[\]/\"load\":$load_json/"
+    json_dump
 }
 
 run_command_result() {
