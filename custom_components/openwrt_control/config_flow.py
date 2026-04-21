@@ -21,8 +21,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import OpenWrtAuthError, OpenWrtClient, OpenWrtError
 from .const import (
+    CONF_OPENCONNECT_INTERFACE,
     CONF_USE_HTTPS,
+    DEFAULT_HOST,
+    DEFAULT_OPENCONNECT_INTERFACE,
+    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_USE_HTTPS,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
 
@@ -41,6 +47,7 @@ async def _async_validate_input(hass, user_input: dict[str, Any]) -> dict[str, s
         port=user_input[CONF_PORT],
         username=user_input[CONF_USERNAME],
         password=user_input[CONF_PASSWORD],
+        openconnect_interface=user_input[CONF_OPENCONNECT_INTERFACE],
         use_https=user_input[CONF_USE_HTTPS],
     )
     status = await client.async_test_connection()
@@ -109,19 +116,19 @@ class OpenWrtControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_HOST,
-                    default=user_input.get(CONF_HOST, ""),
+                    default=user_input.get(CONF_HOST, DEFAULT_HOST),
                 ): str,
                 vol.Required(
                     CONF_PORT,
-                    default=user_input.get(CONF_PORT, ""),
+                    default=user_input.get(CONF_PORT, DEFAULT_PORT),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
                 vol.Required(
                     CONF_USE_HTTPS,
-                    default=user_input.get(CONF_USE_HTTPS, False),
+                    default=user_input.get(CONF_USE_HTTPS, DEFAULT_USE_HTTPS),
                 ): bool,
                 vol.Required(
                     CONF_VERIFY_SSL,
-                    default=user_input.get(CONF_VERIFY_SSL, False),
+                    default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 ): bool,
                 vol.Required(
                     CONF_USERNAME,
@@ -135,6 +142,13 @@ class OpenWrtControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                vol.Required(
+                    CONF_OPENCONNECT_INTERFACE,
+                    default=user_input.get(
+                        CONF_OPENCONNECT_INTERFACE,
+                        DEFAULT_OPENCONNECT_INTERFACE,
+                    ),
+                ): str,
             }
         )
 
