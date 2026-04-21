@@ -12,7 +12,8 @@
           "verify_ssl": "Проверять SSL-сертификат",
           "username": "Имя пользователя",
           "password": "Пароль",
-          "scan_interval": "Интервал опроса (сек.)"
+          "scan_interval": "Интервал опроса (сек.)",
+          "openconnect_interface": "Интерфейс OpenConnect"
         }
       }
     },
@@ -36,7 +37,8 @@
           "verify_ssl": "Проверять SSL-сертификат",
           "username": "Имя пользователя",
           "password": "Пароль",
-          "scan_interval": "Интервал опроса (сек.)"
+          "scan_interval": "Интервал опроса (сек.)",
+          "openconnect_interface": "Интерфейс OpenConnect"
         }
       }
     },
@@ -52,10 +54,10 @@
         "name": "OpenWrt online"
       },
       "wan_up": {
-        "name": "WAN up"
+        "name": "WAN доступен"
       },
-      "vds_openconnect_up": {
-        "name": "VDS OpenConnect up"
+      "openconnect_up": {
+        "name": "OpenConnect доступен"
       },
       "passwall2_running": {
         "name": "PassWall2 запущен"
@@ -101,8 +103,8 @@
       "wan_ip": {
         "name": "WAN IP"
       },
-      "vds_openconnect_ip": {
-        "name": "VDS OpenConnect IP"
+      "openconnect_ip": {
+        "name": "OpenConnect IP"
       }
     },
     "button": {
@@ -115,8 +117,8 @@
       "reload_firewall": {
         "name": "Перезагрузить firewall"
       },
-      "restart_vds_openconnect": {
-        "name": "Перезапустить VDS OpenConnect"
+      "restart_openconnect": {
+        "name": "Перезапустить OpenConnect"
       },
       "reboot": {
         "name": "Перезагрузить OpenWrt"
