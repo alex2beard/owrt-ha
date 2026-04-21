@@ -36,6 +36,7 @@ class OpenWrtClient:
         port: int,
         username: str,
         password: str,
+        openconnect_interface: str,
         use_https: bool,
         request_timeout: int = DEFAULT_REQUEST_TIMEOUT,
     ) -> None:
@@ -45,6 +46,7 @@ class OpenWrtClient:
         self._port = port
         self._username = username
         self._password = password
+        self._openconnect_interface = openconnect_interface
         self._use_https = use_https
         self._request_timeout = request_timeout
         self._session_id: str | None = None
@@ -56,6 +58,11 @@ class OpenWrtClient:
         """Return the ubus endpoint URL."""
         scheme = "https" if self._use_https else "http"
         return f"{scheme}://{self._host}:{self._port}/ubus"
+
+    @property
+    def openconnect_interface(self) -> str:
+        """Return the configured OpenConnect logical interface name."""
+        return self._openconnect_interface
 
     async def async_test_connection(self) -> dict[str, Any]:
         """Validate credentials and fetch one status snapshot."""
@@ -80,9 +87,9 @@ class OpenWrtClient:
         """Reload the firewall service."""
         return await self._async_action("reload_firewall")
 
-    async def async_restart_vds_openconnect(self) -> dict[str, Any]:
+    async def async_restart_openconnect(self) -> dict[str, Any]:
         """Restart the configured OpenConnect interface."""
-        return await self._async_action("restart_vds_openconnect")
+        return await self._async_action("restart_openconnect")
 
     async def async_reboot(self) -> dict[str, Any]:
         """Reboot the router."""
