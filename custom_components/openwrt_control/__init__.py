@@ -18,8 +18,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import OpenWrtClient
 from .const import (
+    CONF_OPENCONNECT_INTERFACE,
     CONF_USE_HTTPS,
+    DEFAULT_OPENCONNECT_INTERFACE,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_USE_HTTPS,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLATFORMS,
 )
@@ -32,6 +36,7 @@ class OpenWrtControlRuntimeData:
 
     client: OpenWrtClient
     coordinator: OpenWrtControlDataUpdateCoordinator
+    openconnect_interface: str
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -44,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = {**entry.data, **entry.options}
     session = async_get_clientsession(
         hass,
-        verify_ssl=config.get(CONF_VERIFY_SSL, False),
+        verify_ssl=config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
     )
     client = OpenWrtClient(
         session=session,
@@ -52,7 +57,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         port=config[CONF_PORT],
         username=config[CONF_USERNAME],
         password=config[CONF_PASSWORD],
-        use_https=config.get(CONF_USE_HTTPS, False),
+        openconnect_interface=config.get(
+            CONF_OPENCONNECT_INTERFACE,
+            DEFAULT_OPENCONNECT_INTERFACE,
+        ),
+        use_https=config.get(CONF_USE_HTTPS, DEFAULT_USE_HTTPS),
     )
     coordinator = OpenWrtControlDataUpdateCoordinator(
         hass=hass,
@@ -64,6 +73,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = OpenWrtControlRuntimeData(
         client=client,
         coordinator=coordinator,
+        openconnect_interface=config.get(
+            CONF_OPENCONNECT_INTERFACE,
+            DEFAULT_OPENCONNECT_INTERFACE,
+        ),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
