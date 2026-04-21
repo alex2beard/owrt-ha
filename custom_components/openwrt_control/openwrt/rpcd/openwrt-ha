@@ -21,7 +21,7 @@ json_get_ipv4() {
 }
 
 normalize_bool() {
-    [ "$1" = "true" ] && printf 'true' || printf 'false'
+    [ "$1" = "true" ] && printf '1' || printf '0'
 }
 
 normalize_load() {
@@ -35,11 +35,15 @@ safe_json() {
 }
 
 service_script_running() {
-    /etc/init.d/"$1" running >/dev/null 2>&1 && printf 'true' || printf 'false'
+    /etc/init.d/"$1" status 2>/dev/null | grep -qw running && printf '1' || printf '0'
+}
+
+passwall2_running() {
+    pgrep -f '/usr/share/passwall2|/tmp/etc/passwall2' >/dev/null 2>&1 && printf '1' || printf '0'
 }
 
 xray_running() {
-    pgrep -f '/tmp/etc/passwall2/bin/xray' >/dev/null 2>&1 && printf 'true' || printf 'false'
+    pgrep -f '/tmp/etc/passwall2/bin/xray' >/dev/null 2>&1 && printf '1' || printf '0'
 }
 
 add_interface_object() {
@@ -113,7 +117,8 @@ render_status() {
     [ -n "$kernel" ] && json_add_string "kernel" "$kernel" || json_add_string "kernel" ""
     [ -n "$version" ] && json_add_string "version" "$version" || json_add_string "version" ""
     json_add_int "uptime" "$uptime"
-    json_add_string "load" "__LOAD_ARRAY__"
+    json_add_array "load"
+    json_close_array
     json_add_object "memory"
     json_add_int "total" "$mem_total"
     json_add_int "free" "$mem_free"
@@ -129,7 +134,7 @@ render_status() {
 
     json_add_object "services"
     json_add_object "passwall2"
-    json_add_boolean "running" "$(service_script_running passwall2)"
+    json_add_boolean "running" "$(passwall2_running)"
     json_close_object
     json_add_object "xray"
     json_add_boolean "running" "$(xray_running)"
@@ -139,7 +144,7 @@ render_status() {
     json_close_object
     json_close_object
 
-    json_dump | sed "s/\"load\":\"__LOAD_ARRAY__\"/\"load\":$load_json/"
+    json_dump | sed "s/\"load\":\[\]/\"load\":$load_json/"
 }
 
 run_command_result() {
@@ -161,7 +166,7 @@ run_command_result() {
     rm -f "$stdout_file" "$stderr_file"
 
     json_init
-    [ "$rc" -eq 0 ] && json_add_boolean "ok" "true" || json_add_boolean "ok" "false"
+    [ "$rc" -eq 0 ] && json_add_boolean "ok" "1" || json_add_boolean "ok" "0"
     json_add_int "rc" "$rc"
     json_add_string "stdout" "$stdout_data"
     json_add_string "stderr" "$stderr_data"
