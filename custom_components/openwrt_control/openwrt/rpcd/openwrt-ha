@@ -2,7 +2,9 @@
 
 . /usr/share/libubox/jshn.sh
 
-SERVICE_VDS="vds_frolkin"
+[ -r /etc/openwrt-ha.conf ] && . /etc/openwrt-ha.conf
+
+SERVICE_OPENCONNECT="${OPENCONNECT_INTERFACE:-vpn}"
 
 json_get() {
     local source="$1"
@@ -47,19 +49,22 @@ xray_running() {
 }
 
 add_interface_object() {
-    local name="$1"
+    local object_key="$1"
+    local interface_name="$2"
+    local include_name="${3:-0}"
     local status_json
     local up
     local device
     local ipv4
 
-    status_json="$(safe_json ubus call "network.interface.${name}" status)"
+    status_json="$(safe_json ubus call "network.interface.${interface_name}" status)"
     up="$(normalize_bool "$(json_get "$status_json" '@.up')")"
     device="$(json_get "$status_json" '@.l3_device')"
     [ -n "$device" ] || device="$(json_get "$status_json" '@.device')"
     ipv4="$(json_get_ipv4 "$status_json")"
 
-    json_add_object "$name"
+    json_add_object "$object_key"
+    [ "$include_name" = "1" ] && json_add_string "name" "$interface_name"
     json_add_boolean "up" "$up"
     [ -n "$device" ] && json_add_string "device" "$device" || json_add_string "device" ""
     [ -n "$ipv4" ] && json_add_string "ipv4" "$ipv4" || json_add_string "ipv4" ""
@@ -128,9 +133,9 @@ render_status() {
     json_close_object
 
     json_add_object "interfaces"
-    add_interface_object "lan"
-    add_interface_object "wan"
-    add_interface_object "$SERVICE_VDS"
+    add_interface_object "lan" "lan"
+    add_interface_object "wan" "wan"
+    add_interface_object "openconnect" "$SERVICE_OPENCONNECT" "1"
     json_close_object
 
     json_add_object "services"
@@ -181,6 +186,7 @@ list_methods() {
   "restart_passwall2": {},
   "restart_dnsmasq": {},
   "reload_firewall": {},
+  "restart_openconnect": {},
   "restart_vds_openconnect": {},
   "reboot": {}
 }
@@ -205,8 +211,8 @@ case "$1" in
             reload_firewall)
                 run_command_result /etc/init.d/firewall reload
             ;;
-            restart_vds_openconnect)
-                run_command_result sh -c "ifdown ${SERVICE_VDS} && sleep 2 && ifup ${SERVICE_VDS}"
+            restart_openconnect|restart_vds_openconnect)
+                run_command_result sh -c "ifdown \"$SERVICE_OPENCONNECT\" && sleep 2 && ifup \"$SERVICE_OPENCONNECT\""
             ;;
             reboot)
                 run_command_result reboot
