@@ -5,22 +5,6 @@
       "ubus": {
         "openwrt.ha": [
           "status"
-        ],
-        "system": [
-          "board",
-          "info"
-        ],
-        "network.interface": [
-          "dump"
-        ],
-        "network.interface.lan": [
-          "status"
-        ],
-        "network.interface.wan": [
-          "status"
-        ],
-        "network.interface.vds_frolkin": [
-          "status"
         ]
       }
     },
@@ -30,6 +14,7 @@
           "restart_passwall2",
           "restart_dnsmasq",
           "reload_firewall",
+          "restart_openconnect",
           "restart_vds_openconnect",
           "reboot"
         ]
