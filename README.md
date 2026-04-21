@@ -59,14 +59,14 @@ OpenWrt-side файлы после установки будут лежать з
 Скопируйте файлы на роутер:
 
 ```sh
-scp custom_components/openwrt_control/openwrt/rpcd/openwrt-ha root@10.0.1.2:/tmp/openwrt-ha
-scp custom_components/openwrt_control/openwrt/acl/openwrt-ha.json root@10.0.1.2:/tmp/openwrt-ha.json
+scp custom_components/openwrt_control/openwrt/rpcd/openwrt-ha <router-admin>@<router-host>:/tmp/openwrt-ha
+scp custom_components/openwrt_control/openwrt/acl/openwrt-ha.json <router-admin>@<router-host>:/tmp/openwrt-ha.json
 ```
 
 Установите rpcd plugin и ACL:
 
 ```sh
-ssh root@10.0.1.2
+ssh <router-admin>@<router-host>
 install -m 0755 /tmp/openwrt-ha /usr/libexec/rpcd/openwrt.ha
 install -m 0644 /tmp/openwrt-ha.json /usr/share/rpcd/acl.d/openwrt-ha.json
 /etc/init.d/rpcd restart
@@ -76,17 +76,17 @@ ubus call openwrt.ha status
 
 Важно: файл в репозитории называется `openwrt-ha`, но устанавливать его нужно как `/usr/libexec/rpcd/openwrt.ha`, чтобы ubus object назывался `openwrt.ha`.
 
-## Пользователь `hass`
+## Пользователь для `/ubus`
 
-Пример настройки пользователя для `/ubus`:
+Пример настройки отдельного пользователя для Home Assistant:
 
 ```sh
-adduser -D -H hass
-passwd hass
+adduser -D -H <ha-user>
+passwd <ha-user>
 
 uci add rpcd login
-uci set rpcd.@login[-1].username='hass'
-uci set rpcd.@login[-1].password='$p$hass'
+uci set rpcd.@login[-1].username='<ha-user>'
+uci set rpcd.@login[-1].password='$p$<ha-user>'
 uci add_list rpcd.@login[-1].read='openwrt-ha'
 uci add_list rpcd.@login[-1].write='openwrt-ha'
 uci commit rpcd
@@ -98,9 +98,9 @@ uci commit rpcd
 Проверка логина:
 
 ```sh
-curl -s http://10.0.1.2/ubus \
+curl -s http://<router-host>/ubus \
   -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"call","params":["00000000000000000000000000000000","session","login",{"username":"hass","password":"YOUR_PASSWORD"}]}'
+  -d '{"jsonrpc":"2.0","id":1,"method":"call","params":["00000000000000000000000000000000","session","login",{"username":"<ha-user>","password":"<ha-password>"}]}'
 ```
 
 Если в ответе есть `ubus_rpc_session`, значит авторизация настроена корректно.
@@ -113,13 +113,17 @@ curl -s http://10.0.1.2/ubus \
 2. Найдите `OpenWrt Control`.
 3. Заполните параметры подключения.
 
-Значения по умолчанию:
+Поля подключения:
 
-- `host`: `owrt.frolkin.com`
-- `port`: `443`
-- `use_https`: `true`
-- `verify_ssl`: `true`
-- `scan_interval`: `30`
+- `host`
+- `port`
+- `use_https`
+- `verify_ssl`
+- `username`
+- `password`
+- `scan_interval`
+
+По умолчанию в коде оставлен только `scan_interval = 30`. Адрес роутера, порт и TLS-параметры нужно указать вручную.
 
 Интеграция использует `session.login`, переиспользует ubus session и при истечении сессии логинится заново.
 
@@ -166,7 +170,7 @@ Buttons:
 - проверьте доступность `http://<host>/ubus` или `https://<host>/ubus`;
 - проверьте, что `rpcd` перезапущен;
 - проверьте `ubus -v list openwrt.ha`;
-- проверьте логин пользователя `hass` через `session.login`;
+- проверьте логин выделенного пользователя через `session.login`;
 - проверьте ACL для `openwrt.ha`, `system`, `network.interface.*`.
 
 Если не видны статусы сервисов или VPN:
