@@ -54,10 +54,10 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenWrtBinarySensorEntityDescription, ...] = (
         icon="mdi:web-check",
     ),
     OpenWrtBinarySensorEntityDescription(
-        key="vds_openconnect_up",
-        translation_key="vds_openconnect_up",
+        key="openconnect_up",
+        translation_key="openconnect_up",
         value_fn=lambda data, _is_online: bool(
-            _get_path(data, "interfaces", "vds_frolkin", "up")
+            _get_path(data, "interfaces", "openconnect", "up")
         ),
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         icon="mdi:shield-link-variant",
