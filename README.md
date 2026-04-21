@@ -34,15 +34,34 @@
 
 ## 4. Установка через HACS
 
-Для установки через HACS репозиторий должен быть добавлен как custom repository типа `Integration`.
+Это основной и рекомендуемый способ установки из GitHub.
 
-Важно: по документации HACS private GitHub repositories не поддерживаются вообще. Для установки через HACS этот репозиторий должен быть public.
+Шаги:
 
-После установки через HACS integration окажется в Home Assistant по пути:
+1. Убедитесь, что репозиторий public.
+2. В Home Assistant откройте `HACS -> 3 dots -> Custom repositories`.
+3. Вставьте URL репозитория GitHub:
+
+```text
+https://github.com/alex2beard/owrt-ha
+```
+
+4. Выберите тип `Integration`.
+5. Нажмите `Add`.
+6. Найдите `OpenWrt Control` в HACS и установите интеграцию.
+7. Перезапустите Home Assistant.
+
+После установки через HACS компонент окажется по пути:
 
 ```text
 config/custom_components/openwrt_control/
 ```
+
+Важно:
+
+- GitHub Actions workflow для HACS не обязателен для такой установки;
+- для установки через HACS как `Custom repository` важны public GitHub repo и корректная структура integration;
+- private GitHub repositories HACS не поддерживает.
 
 OpenWrt-side файлы будут находиться внутри установленной интеграции:
 
@@ -118,6 +137,8 @@ curl -s http://10.0.1.2/ubus \
 Если в ответе есть `ubus_rpc_session`, значит авторизация и ACL-связка настроены корректно.
 
 ## 7. Установка HA custom component
+
+Это запасной вариант, если не хотите ставить через HACS.
 
 Скопируйте каталог [`custom_components/openwrt_control`](custom_components/openwrt_control) в директорию `config/custom_components/` Home Assistant.
 
@@ -225,9 +246,8 @@ script:
 
 ## 11. CI и проверка репозитория
 
-В репозитории добавлены workflow-файлы:
+В репозитории оставлен workflow:
 
-- `.github/workflows/validate.yml` для HACS validation;
 - `.github/workflows/hassfest.yml` для Home Assistant `hassfest`.
 
-Это даёт базовую автоматическую проверку структуры integration-репозитория и метаданных Home Assistant.
+Он проверяет структуру integration-репозитория и метаданные Home Assistant.
