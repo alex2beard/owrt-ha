@@ -119,9 +119,9 @@ SENSOR_DESCRIPTIONS: tuple[OpenWrtSensorEntityDescription, ...] = (
         icon="mdi:web",
     ),
     OpenWrtSensorEntityDescription(
-        key="vds_openconnect_ip",
-        translation_key="vds_openconnect_ip",
-        value_fn=lambda data: _get_path(data, "interfaces", "vds_frolkin", "ipv4"),
+        key="openconnect_ip",
+        translation_key="openconnect_ip",
+        value_fn=lambda data: _get_path(data, "interfaces", "openconnect", "ipv4"),
         icon="mdi:shield-link-variant",
     ),
 )
