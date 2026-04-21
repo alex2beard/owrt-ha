@@ -12,7 +12,8 @@
           "verify_ssl": "Verify SSL certificate",
           "username": "Username",
           "password": "Password",
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "openconnect_interface": "OpenConnect interface"
         }
       }
     },
@@ -36,7 +37,8 @@
           "verify_ssl": "Verify SSL certificate",
           "username": "Username",
           "password": "Password",
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "openconnect_interface": "OpenConnect interface"
         }
       }
     },
@@ -54,8 +56,8 @@
       "wan_up": {
         "name": "WAN up"
       },
-      "vds_openconnect_up": {
-        "name": "VDS OpenConnect up"
+      "openconnect_up": {
+        "name": "OpenConnect up"
       },
       "passwall2_running": {
         "name": "PassWall2 running"
@@ -101,8 +103,8 @@
       "wan_ip": {
         "name": "WAN IP"
       },
-      "vds_openconnect_ip": {
-        "name": "VDS OpenConnect IP"
+      "openconnect_ip": {
+        "name": "OpenConnect IP"
       }
     },
     "button": {
@@ -115,8 +117,8 @@
       "reload_firewall": {
         "name": "Reload firewall"
       },
-      "restart_vds_openconnect": {
-        "name": "Restart VDS OpenConnect"
+      "restart_openconnect": {
+        "name": "Restart OpenConnect"
       },
       "reboot": {
         "name": "Reboot OpenWrt"
