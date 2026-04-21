@@ -1,3 +1,4 @@
 {
-  "name": "OpenWrt Control"
+  "name": "OpenWrt Control",
+  "homeassistant": "2024.6.0"
 }
