@@ -22,11 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import OpenWrtAuthError, OpenWrtClient, OpenWrtError
 from .const import (
     CONF_USE_HTTPS,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_USE_HTTPS,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
 
@@ -113,19 +109,19 @@ class OpenWrtControlConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_HOST,
-                    default=user_input.get(CONF_HOST, DEFAULT_HOST),
+                    default=user_input.get(CONF_HOST, ""),
                 ): str,
                 vol.Required(
                     CONF_PORT,
-                    default=user_input.get(CONF_PORT, DEFAULT_PORT),
+                    default=user_input.get(CONF_PORT, ""),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
                 vol.Required(
                     CONF_USE_HTTPS,
-                    default=user_input.get(CONF_USE_HTTPS, DEFAULT_USE_HTTPS),
+                    default=user_input.get(CONF_USE_HTTPS, False),
                 ): bool,
                 vol.Required(
                     CONF_VERIFY_SSL,
-                    default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                    default=user_input.get(CONF_VERIFY_SSL, False),
                 ): bool,
                 vol.Required(
                     CONF_USERNAME,
