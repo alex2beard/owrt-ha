@@ -1,57 +1,44 @@
 # OpenWrt Control for Home Assistant
 
-## 1. Назначение интеграции
+`openwrt_control` — custom integration для Home Assistant, которая работает с OpenWrt через `ubus/rpcd`, а не через HTML LuCI.
 
-`openwrt_control` — это custom integration для Home Assistant, которая работает с OpenWrt через `ubus/rpcd`, а не через парсинг HTML LuCI. Интеграция предназначена для мониторинга состояния роутера и для ограниченного набора безопасных действий управления.
+Интеграция рассчитана на OpenWrt x86/router и даёт безопасный базовый мониторинг плюс несколько заранее заданных действий управления.
 
-Она ориентирована на OpenWrt x86/router without Wi-Fi client tracking и особенно хорошо подходит для сценариев, где роутер используется как сетевой шлюз, VPN endpoint и точка запуска сервисов вроде PassWall2.
+## Что умеет
 
-## 2. Что умеет интеграция
+- показывает доступность OpenWrt;
+- показывает состояние `wan` и `vds_frolkin`;
+- показывает `WAN IP`, `LAN IP`, `OpenConnect IP`;
+- показывает состояние `passwall2`, `xray`, `dnsmasq`;
+- показывает `uptime`, `load`, память, `hostname`, `version`, `kernel`, `model`;
+- умеет restart `passwall2`, restart `dnsmasq`, reload `firewall`, restart `vds_frolkin`, reboot.
 
-Интеграция умеет:
-
-- проверять доступность OpenWrt;
-- показывать состояние `wan` и `vds_frolkin`;
-- показывать `WAN IP`, `LAN IP`, `OpenConnect IP`;
-- показывать состояние `passwall2`, `xray`, `dnsmasq`;
-- отображать `uptime`, `load average`, доступную память;
-- отображать `hostname`, `OpenWrt version`, `kernel`, `model`;
-- выполнять предопределенные действия: restart `passwall2`, restart `dnsmasq`, reload `firewall`, restart `vds_frolkin`, reboot роутера.
-
-## 3. Что она не делает
-
-Интеграция намеренно не делает следующее:
+## Что не делает
 
 - не реализует `device_tracker`;
 - не отслеживает Wi-Fi-клиентов;
-- не парсит HTML LuCI;
-- не предоставляет универсальный `exec`;
-- не редактирует firewall rules;
-- не редактирует конфигурацию `passwall2`;
-- не редактирует network config.
+- не даёт универсальный `exec`;
+- не редактирует firewall rules, `passwall2` config или network config.
 
-Отдельно: `device_tracker` не реализован намеренно. Wi-Fi-клиенты не отслеживаются. Интеграция ориентирована на OpenWrt x86/router без Wi-Fi.
+`device_tracker` и Wi-Fi client tracking не реализованы намеренно. Интеграция ориентирована на OpenWrt x86/router без Wi-Fi.
 
-## 4. Установка через HACS
+## Установка через HACS
 
-Это основной и рекомендуемый способ установки из GitHub.
-
-Шаги:
+Это основной способ установки из GitHub.
 
 1. Убедитесь, что репозиторий public.
 2. В Home Assistant откройте `HACS -> 3 dots -> Custom repositories`.
-3. Вставьте URL репозитория GitHub:
+3. Добавьте URL:
 
 ```text
 https://github.com/alex2beard/owrt-ha
 ```
 
 4. Выберите тип `Integration`.
-5. Нажмите `Add`.
-6. Найдите `OpenWrt Control` в HACS и установите интеграцию.
-7. Перезапустите Home Assistant.
+5. Установите `OpenWrt Control`.
+6. Перезапустите Home Assistant.
 
-После установки через HACS компонент окажется по пути:
+После установки компонент будет находиться в:
 
 ```text
 config/custom_components/openwrt_control/
@@ -59,23 +46,17 @@ config/custom_components/openwrt_control/
 
 Важно:
 
-- GitHub Actions workflow для HACS не обязателен для такой установки;
-- для установки через HACS как `Custom repository` важны public GitHub repo и корректная структура integration;
+- GitHub workflow для HACS не обязателен для установки как `Custom repository`;
 - private GitHub repositories HACS не поддерживает.
 
-OpenWrt-side файлы будут находиться внутри установленной интеграции:
+OpenWrt-side файлы после установки будут лежать здесь:
 
 - `config/custom_components/openwrt_control/openwrt/rpcd/openwrt-ha`
 - `config/custom_components/openwrt_control/openwrt/acl/openwrt-ha.json`
 
-## 5. Установка OpenWrt-side rpcd plugin
+## Установка OpenWrt-side plugin
 
-В репозитории и в установленной HACS-версии есть две OpenWrt-side части:
-
-- [`custom_components/openwrt_control/openwrt/rpcd/openwrt-ha`](custom_components/openwrt_control/openwrt/rpcd/openwrt-ha)
-- [`custom_components/openwrt_control/openwrt/acl/openwrt-ha.json`](custom_components/openwrt_control/openwrt/acl/openwrt-ha.json)
-
-Скопируйте их на роутер:
+Скопируйте файлы на роутер:
 
 ```sh
 scp custom_components/openwrt_control/openwrt/rpcd/openwrt-ha root@10.0.1.2:/tmp/openwrt-ha
@@ -90,21 +71,14 @@ install -m 0755 /tmp/openwrt-ha /usr/libexec/rpcd/openwrt.ha
 install -m 0644 /tmp/openwrt-ha.json /usr/share/rpcd/acl.d/openwrt-ha.json
 /etc/init.d/rpcd restart
 ubus -v list openwrt.ha
-```
-
-Важно: файл в репозитории называется `openwrt-ha`, но установить его нужно как `/usr/libexec/rpcd/openwrt.ha`, чтобы ubus object назывался именно `openwrt.ha`.
-
-Проверка статуса:
-
-```sh
 ubus call openwrt.ha status
 ```
 
-## 6. Создание пользователя `hass` и выдача ACL
+Важно: файл в репозитории называется `openwrt-ha`, но устанавливать его нужно как `/usr/libexec/rpcd/openwrt.ha`, чтобы ubus object назывался `openwrt.ha`.
 
-По документации OpenWrt ACL для HTTP ubus задаются в `/usr/share/rpcd/acl.d/*.json`, а привязка логина к ACL-ролям делается через `/etc/config/rpcd`.
+## Пользователь `hass`
 
-Пример настройки пользователя `hass`:
+Пример настройки пользователя для `/ubus`:
 
 ```sh
 adduser -D -H hass
@@ -121,12 +95,7 @@ uci commit rpcd
 /etc/init.d/uhttpd restart
 ```
 
-Здесь:
-
-- `$p$hass` говорит `rpcd` брать пароль пользователя `hass` из `/etc/shadow`;
-- `read/write openwrt-ha` привязывают пользователя к ACL-роли из файла `openwrt-ha.json`.
-
-Проверка логина через `/ubus`:
+Проверка логина:
 
 ```sh
 curl -s http://10.0.1.2/ubus \
@@ -134,30 +103,15 @@ curl -s http://10.0.1.2/ubus \
   -d '{"jsonrpc":"2.0","id":1,"method":"call","params":["00000000000000000000000000000000","session","login",{"username":"hass","password":"YOUR_PASSWORD"}]}'
 ```
 
-Если в ответе есть `ubus_rpc_session`, значит авторизация и ACL-связка настроены корректно.
+Если в ответе есть `ubus_rpc_session`, значит авторизация настроена корректно.
 
-## 7. Установка HA custom component
+## Настройка в Home Assistant
 
-Это запасной вариант, если не хотите ставить через HACS.
-
-Скопируйте каталог [`custom_components/openwrt_control`](custom_components/openwrt_control) в директорию `config/custom_components/` Home Assistant.
-
-Итоговый путь должен быть таким:
-
-```text
-config/custom_components/openwrt_control/
-```
-
-После копирования перезапустите Home Assistant.
-
-## 8. Настройка через UI
-
-В Home Assistant:
+После установки:
 
 1. Откройте `Settings -> Devices & Services -> Add Integration`.
 2. Найдите `OpenWrt Control`.
-3. Укажите параметры:
-   `host`, `port`, `use_https`, `verify_ssl`, `username`, `password`, `scan_interval`.
+3. Заполните параметры подключения.
 
 Значения по умолчанию:
 
@@ -167,11 +121,9 @@ config/custom_components/openwrt_control/
 - `verify_ssl`: `true`
 - `scan_interval`: `30`
 
-После успешной настройки интеграция логинится через `session.login`, переиспользует ubus session и при ошибке авторизации пытается перелогиниться.
+Интеграция использует `session.login`, переиспользует ubus session и при истечении сессии логинится заново.
 
-## 9. Пример entities
-
-Создаются следующие сущности.
+## Сущности
 
 Binary sensors:
 
@@ -205,49 +157,31 @@ Buttons:
 - `button.openwrt_restart_vds_openconnect`
 - `button.openwrt_reboot`
 
-Кнопка `reboot` сохраняется как отдельная сущность, но по умолчанию отключена в entity registry. Это сделано намеренно, потому что действие потенциально опасное и легко оборвать себе доступ к роутеру в неподходящий момент.
+Кнопка `reboot` остаётся отдельной сущностью, но по умолчанию отключена в entity registry. Это сделано намеренно, потому что действие опасное и может оборвать доступ к роутеру. Использовать её лучше через script с подтверждением.
 
-Даже после ручного включения кнопку `reboot` лучше использовать не напрямую из UI, а через Home Assistant script с подтверждением.
-
-Пример script:
-
-```yaml
-script:
-  reboot_openwrt_confirmed:
-    alias: Reboot OpenWrt (confirmed)
-    sequence:
-      - action: button.press
-        target:
-          entity_id: button.openwrt_reboot
-```
-
-## 10. Troubleshooting
+## Troubleshooting
 
 Если интеграция не подключается:
 
-- проверьте, что `/ubus` доступен по `http://<host>/ubus` или `https://<host>/ubus`;
-- проверьте, что `rpcd` перезапущен после установки plugin и ACL;
-- проверьте, что `ubus -v list openwrt.ha` показывает нужные методы;
-- проверьте, что пользователь `hass` может выполнить `session.login`;
+- проверьте доступность `http://<host>/ubus` или `https://<host>/ubus`;
+- проверьте, что `rpcd` перезапущен;
+- проверьте `ubus -v list openwrt.ha`;
+- проверьте логин пользователя `hass` через `session.login`;
 - проверьте ACL для `openwrt.ha`, `system`, `network.interface.*`.
 
-Если не видно VPN/IP/service states:
+Если не видны статусы сервисов или VPN:
 
-- проверьте, что интерфейс называется именно `vds_frolkin`;
-- проверьте, что `passwall2` и `dnsmasq` возвращают `running` через свои init.d scripts;
-- проверьте, что `xray` действительно запущен именно из `/tmp/etc/passwall2/bin/xray`;
+- проверьте, что интерфейс называется `vds_frolkin`;
+- проверьте, что `passwall2` и `dnsmasq` возвращают `running` через init.d;
+- проверьте, что `xray` запущен из `/tmp/etc/passwall2/bin/xray`;
 - проверьте вывод `ubus call network.interface.vds_frolkin status`.
 
-Если кнопки завершаются ошибкой:
+Если команды из кнопок завершаются ошибкой:
 
 - смотрите логи Home Assistant;
-- проверьте, что соответствующие команды на роутере выполняются вручную;
-- проверьте, что ACL установлен именно из `openwrt-ha.json`.
+- проверьте выполнение команд вручную на роутере;
+- проверьте, что ACL установлен из `openwrt-ha.json`.
 
-## 11. CI и проверка репозитория
+## Проверка репозитория
 
-В репозитории оставлен workflow:
-
-- `.github/workflows/hassfest.yml` для Home Assistant `hassfest`.
-
-Он проверяет структуру integration-репозитория и метаданные Home Assistant.
+В репозитории оставлен `.github/workflows/hassfest.yml`, который проверяет структуру integration-репозитория и метаданные Home Assistant.
