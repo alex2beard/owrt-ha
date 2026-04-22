@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.4 - 2026-04-22
+
+### Fixed
+
+- Fixed OpenWrt-side rpcd plugin version mismatch in release `v0.2.3`.
+- `PLUGIN_VERSION` now matches the release tag so the OpenWrt updater validation can complete successfully.
+
 ## 0.2.3 - 2026-04-22
 
 ### Added
