@@ -15,7 +15,6 @@
           "restart_dnsmasq",
           "reload_firewall",
           "restart_openconnect",
-          "restart_vds_openconnect",
           "reboot"
         ]
       }
