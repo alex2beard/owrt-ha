@@ -103,6 +103,14 @@ SENSOR_DESCRIPTIONS: tuple[OpenWrtSensorEntityDescription, ...] = (
         icon="mdi:label-outline",
     ),
     OpenWrtSensorEntityDescription(
+        key="plugin_version",
+        translation_key="plugin_version",
+        value_fn=lambda data, language: _get_path(data, "plugin", "version"),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:puzzle-outline",
+    ),
+    OpenWrtSensorEntityDescription(
         key="kernel",
         translation_key="kernel",
         value_fn=lambda data, language: _get_path(data, "system", "kernel"),

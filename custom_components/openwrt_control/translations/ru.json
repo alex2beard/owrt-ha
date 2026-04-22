@@ -77,6 +77,9 @@
       "version": {
         "name": "Версия"
       },
+      "plugin_version": {
+        "name": "Версия rpcd plugin"
+      },
       "kernel": {
         "name": "Kernel"
       },

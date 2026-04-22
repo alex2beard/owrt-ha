@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.2 - 2026-04-22
+
+### Added
+
+- Added OpenWrt-side rpcd plugin version to the status payload as `plugin.version`.
+- Added disabled-by-default diagnostic sensor for the rpcd plugin version.
+
+### Changed
+
+- README now explicitly reminds users to update OpenWrt-side rpcd files after releases that modify `custom_components/openwrt_control/openwrt/`.
+
 ## 0.2.1 - 2026-04-22
 
 ### Added
