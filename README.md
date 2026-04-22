@@ -10,7 +10,7 @@ It does not parse LuCI HTML, does not implement `device_tracker`, and does not t
 - Exposes WAN state, WAN IP, WAN RX/TX rate in Mbit/s, and raw WAN RX/TX byte counters as diagnostics.
 - Exposes OpenConnect state and OpenConnect IP.
 - Exposes `passwall2`, `xray`, and `dnsmasq` running state.
-- Exposes hostname, version, kernel, model, human-readable uptime, CPU usage, memory utilization, load averages as diagnostics, and available memory as diagnostics.
+- Exposes hostname, version, kernel, model, human-readable uptime, CPU usage, memory utilization, load averages as diagnostics, available memory as diagnostics, and rpcd plugin version as diagnostics.
 - Provides buttons to restart `passwall2`, restart `dnsmasq`, reload `firewall`, restart OpenConnect, and reboot OpenWrt.
 
 ## What it does not do
@@ -38,6 +38,13 @@ The custom component will be installed to:
 ```text
 config/custom_components/openwrt_control/
 ```
+
+Important after updates:
+
+- HACS updates only the Home Assistant custom component.
+- If a release changes files under `custom_components/openwrt_control/openwrt/`, update the OpenWrt-side rpcd plugin and ACL manually.
+- After updating OpenWrt-side files, restart `rpcd` and check `ubus call openwrt.ha status`.
+- The status payload includes `plugin.version`; use it to confirm which OpenWrt-side plugin version is actually installed on the router.
 
 ## Install the OpenWrt rpcd plugin
 
@@ -187,6 +194,7 @@ Visible sensors:
 
 Diagnostic sensors disabled by default:
 
+- `sensor.openwrt_plugin_version`
 - `sensor.openwrt_uptime_seconds`
 - `sensor.openwrt_load_1m`
 - `sensor.openwrt_load_5m`
@@ -212,6 +220,7 @@ The reboot button remains a separate entity and is disabled by default in the en
 - Uptime is shown as a human-readable string. Raw uptime seconds are kept as a disabled diagnostic sensor.
 - WAN RX/TX rates are calculated by the rpcd plugin from raw byte counters and exposed in Mbit/s.
 - Raw WAN RX/TX byte counters are read from `/sys/class/net/<wan-device>/statistics/rx_bytes` and `tx_bytes`, and are kept as disabled diagnostic sensors.
+- `plugin.version` is the installed OpenWrt-side rpcd plugin version. It helps detect when Home Assistant was updated through HACS but OpenWrt-side files were not updated yet.
 
 ## Expected ubus methods
 
@@ -240,6 +249,7 @@ ubus call openwrt.ha status
 
 The response should include:
 
+- `plugin.version`
 - `system.cpu.usage_percent`
 - `system.memory.total`
 - `system.memory.available`
@@ -260,6 +270,9 @@ Example shape:
 
 ```json
 {
+  "plugin": {
+    "version": "0.2.2"
+  },
   "system": {
     "cpu": {
       "usage_percent": 12.4
