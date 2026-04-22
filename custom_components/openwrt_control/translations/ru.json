@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Подключение к OpenWrt",
-        "description": "Настройте доступ к OpenWrt через LuCI ubus endpoint.",
+        "description": "Настройте доступ к OpenWrt через LuCI ubus endpoint. Поле «Интерфейс OpenConnect» — это логическое имя интерфейса OpenWrt из /etc/config/network, например vpn. Оно должно совпадать с OPENCONNECT_INTERFACE в /etc/openwrt-ha.conf.",
         "data": {
           "host": "Хост",
           "port": "Порт",
@@ -13,7 +13,7 @@
           "username": "Имя пользователя",
           "password": "Пароль",
           "scan_interval": "Интервал опроса (сек.)",
-          "openconnect_interface": "Интерфейс OpenConnect"
+          "openconnect_interface": "Логический интерфейс OpenConnect"
         }
       }
     },
@@ -30,6 +30,7 @@
     "step": {
       "init": {
         "title": "Параметры OpenWrt Control",
+        "description": "Поле «Интерфейс OpenConnect» — это логическое имя интерфейса OpenWrt из /etc/config/network. Оно должно совпадать с OPENCONNECT_INTERFACE в /etc/openwrt-ha.conf.",
         "data": {
           "host": "Хост",
           "port": "Порт",
@@ -38,7 +39,7 @@
           "username": "Имя пользователя",
           "password": "Пароль",
           "scan_interval": "Интервал опроса (сек.)",
-          "openconnect_interface": "Интерфейс OpenConnect"
+          "openconnect_interface": "Логический интерфейс OpenConnect"
         }
       }
     },
@@ -85,6 +86,12 @@
       "uptime": {
         "name": "Uptime"
       },
+      "uptime_seconds": {
+        "name": "Uptime в секундах"
+      },
+      "cpu_usage": {
+        "name": "Загрузка CPU"
+      },
       "load_1m": {
         "name": "Load 1m"
       },
@@ -94,6 +101,9 @@
       "load_15m": {
         "name": "Load 15m"
       },
+      "memory_used_percent": {
+        "name": "Использование памяти"
+      },
       "memory_available": {
         "name": "Доступная память"
       },
@@ -102,6 +112,12 @@
       },
       "wan_ip": {
         "name": "WAN IP"
+      },
+      "wan_rx": {
+        "name": "WAN RX"
+      },
+      "wan_tx": {
+        "name": "WAN TX"
       },
       "openconnect_ip": {
         "name": "OpenConnect IP"
