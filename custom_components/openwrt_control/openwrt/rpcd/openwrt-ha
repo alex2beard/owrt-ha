@@ -4,6 +4,7 @@
 
 [ -r /etc/openwrt-ha.conf ] && . /etc/openwrt-ha.conf
 
+PLUGIN_VERSION="0.2.2"
 SERVICE_OPENCONNECT="${OPENCONNECT_INTERFACE:-vpn}"
 WAN_RATE_STATE_FILE="/tmp/openwrt-ha-wan-rate"
 
@@ -249,6 +250,10 @@ render_status() {
     [ -n "$mem_available" ] || mem_available=$(( ${mem_free:-0} + ${mem_buffered:-0} + ${mem_cached:-0} ))
 
     json_init
+
+    json_add_object "plugin"
+    json_add_string "version" "$PLUGIN_VERSION"
+    json_close_object
 
     json_add_object "system"
     [ -n "$hostname" ] && json_add_string "hostname" "$hostname" || json_add_string "hostname" "OpenWrt"
