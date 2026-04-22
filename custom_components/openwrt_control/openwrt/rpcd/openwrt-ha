@@ -5,6 +5,7 @@
 [ -r /etc/openwrt-ha.conf ] && . /etc/openwrt-ha.conf
 
 SERVICE_OPENCONNECT="${OPENCONNECT_INTERFACE:-vpn}"
+WAN_RATE_STATE_FILE="/tmp/openwrt-ha-wan-rate"
 
 json_get() {
     local source="$1"
@@ -45,6 +46,25 @@ read_uint_file() {
     }
 
     awk 'NR == 1 { value=$1 + 0; printf "%.0f", value; exit }' "$path" 2>/dev/null || printf '0'
+}
+
+calculate_rate_mbps() {
+    local current="$1"
+    local previous="$2"
+    local seconds="$3"
+
+    awk \
+        -v current="$current" \
+        -v previous="$previous" \
+        -v seconds="$seconds" \
+        'BEGIN {
+            delta = current - previous
+            if (seconds <= 0 || delta < 0) {
+                printf "%.3f", 0
+                exit
+            }
+            printf "%.3f", (delta * 8) / seconds / 1000000
+        }'
 }
 
 read_cpu_sample() {
@@ -117,6 +137,45 @@ xray_running() {
     pgrep -f '/tmp/etc/passwall2/bin/xray' >/dev/null 2>&1 && printf '1' || printf '0'
 }
 
+add_wan_statistics() {
+    local device="$1"
+    local rx_bytes
+    local tx_bytes
+    local now
+    local prev_device
+    local prev_ts
+    local prev_rx
+    local prev_tx
+    local seconds
+    local rx_mbps
+    local tx_mbps
+
+    rx_bytes="$(read_uint_file "/sys/class/net/${device}/statistics/rx_bytes")"
+    tx_bytes="$(read_uint_file "/sys/class/net/${device}/statistics/tx_bytes")"
+    now="$(date +%s 2>/dev/null)"
+    [ -n "$now" ] || now=0
+
+    if [ -r "$WAN_RATE_STATE_FILE" ]; then
+        read -r prev_device prev_ts prev_rx prev_tx <"$WAN_RATE_STATE_FILE"
+    fi
+
+    if [ "$prev_device" = "$device" ] && [ -n "$prev_ts" ]; then
+        seconds=$(( now - prev_ts ))
+    else
+        seconds=0
+    fi
+
+    rx_mbps="$(calculate_rate_mbps "$rx_bytes" "${prev_rx:-0}" "${seconds:-0}")"
+    tx_mbps="$(calculate_rate_mbps "$tx_bytes" "${prev_tx:-0}" "${seconds:-0}")"
+
+    printf '%s %s %s %s\n' "$device" "$now" "$rx_bytes" "$tx_bytes" >"$WAN_RATE_STATE_FILE" 2>/dev/null || true
+
+    json_add_int "rx_bytes" "$rx_bytes"
+    json_add_int "tx_bytes" "$tx_bytes"
+    json_add_double "rx_mbps" "$rx_mbps"
+    json_add_double "tx_mbps" "$tx_mbps"
+}
+
 add_interface_object() {
     local object_key="$1"
     local interface_name="$2"
@@ -126,8 +185,6 @@ add_interface_object() {
     local up
     local device
     local ipv4
-    local rx_bytes
-    local tx_bytes
 
     status_json="$(safe_json ubus call "network.interface.${interface_name}" status)"
     up="$(normalize_bool "$(json_get "$status_json" '@.up')")"
@@ -142,10 +199,7 @@ add_interface_object() {
     [ -n "$ipv4" ] && json_add_string "ipv4" "$ipv4" || json_add_string "ipv4" ""
 
     if [ "$include_counters" = "1" ] && [ -n "$device" ]; then
-        rx_bytes="$(read_uint_file "/sys/class/net/${device}/statistics/rx_bytes")"
-        tx_bytes="$(read_uint_file "/sys/class/net/${device}/statistics/tx_bytes")"
-        json_add_int "rx_bytes" "$rx_bytes"
-        json_add_int "tx_bytes" "$tx_bytes"
+        add_wan_statistics "$device"
     fi
 
     json_close_object

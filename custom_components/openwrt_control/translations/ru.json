@@ -113,11 +113,17 @@
       "wan_ip": {
         "name": "WAN IP"
       },
+      "wan_rx_rate": {
+        "name": "Скорость WAN RX"
+      },
+      "wan_tx_rate": {
+        "name": "Скорость WAN TX"
+      },
       "wan_rx": {
-        "name": "WAN RX"
+        "name": "WAN RX байты"
       },
       "wan_tx": {
-        "name": "WAN TX"
+        "name": "WAN TX байты"
       },
       "openconnect_ip": {
         "name": "OpenConnect IP"

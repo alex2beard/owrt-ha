@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.1 - 2026-04-22
+
+### Added
+
+- Added visible WAN RX/TX rate sensors in Mbit/s.
+- Added `interfaces.wan.rx_mbps` and `interfaces.wan.tx_mbps` to the rpcd status payload.
+
+### Changed
+
+- WAN RX/TX byte counters are now diagnostic and disabled by default.
+- Russian UI now uses `Скорость WAN RX` and `Скорость WAN TX` for visible WAN rate sensors.
+
 ## 0.2.0 - 2026-04-22
 
 ### Added
