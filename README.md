@@ -7,7 +7,7 @@ It does not parse LuCI HTML, does not implement `device_tracker`, and does not t
 ## What it does
 
 - Monitors router availability.
-- Exposes WAN state, WAN IP, WAN RX counter, and WAN TX counter.
+- Exposes WAN state, WAN IP, WAN RX/TX rate in Mbit/s, and raw WAN RX/TX byte counters as diagnostics.
 - Exposes OpenConnect state and OpenConnect IP.
 - Exposes `passwall2`, `xray`, and `dnsmasq` running state.
 - Exposes hostname, version, kernel, model, human-readable uptime, CPU usage, memory utilization, load averages as diagnostics, and available memory as diagnostics.
@@ -181,8 +181,8 @@ Visible sensors:
 - `sensor.openwrt_memory_used_percent`
 - `sensor.openwrt_lan_ip`
 - `sensor.openwrt_wan_ip`
-- `sensor.openwrt_wan_rx`
-- `sensor.openwrt_wan_tx`
+- `sensor.openwrt_wan_rx_rate`
+- `sensor.openwrt_wan_tx_rate`
 - `sensor.openwrt_openconnect_ip`
 
 Diagnostic sensors disabled by default:
@@ -192,6 +192,8 @@ Diagnostic sensors disabled by default:
 - `sensor.openwrt_load_5m`
 - `sensor.openwrt_load_15m`
 - `sensor.openwrt_memory_available`
+- `sensor.openwrt_wan_rx`
+- `sensor.openwrt_wan_tx`
 
 Buttons:
 
@@ -208,7 +210,8 @@ The reboot button remains a separate entity and is disabled by default in the en
 - Memory is exposed as used percentage: `(1 - available / total) * 100`.
 - CPU usage is calculated from two `/proc/stat` samples. Load average is kept only as diagnostic data and is not labeled as CPU usage.
 - Uptime is shown as a human-readable string. Raw uptime seconds are kept as a disabled diagnostic sensor.
-- WAN RX/TX are byte counters read from `/sys/class/net/<wan-device>/statistics/rx_bytes` and `tx_bytes`. Home Assistant can render them as MiB/GiB when the data size device class is used.
+- WAN RX/TX rates are calculated by the rpcd plugin from raw byte counters and exposed in Mbit/s.
+- Raw WAN RX/TX byte counters are read from `/sys/class/net/<wan-device>/statistics/rx_bytes` and `tx_bytes`, and are kept as disabled diagnostic sensors.
 
 ## Expected ubus methods
 
@@ -244,6 +247,8 @@ The response should include:
 - `interfaces.wan.up`
 - `interfaces.wan.rx_bytes`
 - `interfaces.wan.tx_bytes`
+- `interfaces.wan.rx_mbps`
+- `interfaces.wan.tx_mbps`
 - `interfaces.openconnect.name`
 - `interfaces.openconnect.up`
 - `interfaces.openconnect.ipv4`
@@ -270,7 +275,9 @@ Example shape:
       "device": "eth1",
       "ipv4": "203.0.113.10",
       "rx_bytes": 123456789,
-      "tx_bytes": 987654321
+      "tx_bytes": 987654321,
+      "rx_mbps": 25.4,
+      "tx_mbps": 7.8
     },
     "openconnect": {
       "name": "vpn",
