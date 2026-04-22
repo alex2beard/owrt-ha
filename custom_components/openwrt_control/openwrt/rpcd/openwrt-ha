@@ -4,7 +4,7 @@
 
 [ -r /etc/openwrt-ha.conf ] && . /etc/openwrt-ha.conf
 
-PLUGIN_VERSION="0.2.2"
+PLUGIN_VERSION="0.2.4"
 SERVICE_OPENCONNECT="${OPENCONNECT_INTERFACE:-vpn}"
 WAN_RATE_STATE_FILE="/tmp/openwrt-ha-wan-rate"
 
