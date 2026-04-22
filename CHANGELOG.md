@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3 - 2026-04-22
+
+### Added
+
+- Added OpenWrt-side updater script: `custom_components/openwrt_control/openwrt/update-openwrt-ha.sh`.
+- The updater accepts a release tag, downloads OpenWrt-side files from GitHub, validates them, backs up the current files, installs the new files, restarts `rpcd`, and prints a status summary.
+
 ## 0.2.2 - 2026-04-22
 
 ### Added
