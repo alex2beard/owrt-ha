@@ -7,10 +7,10 @@ It does not parse LuCI HTML, does not implement `device_tracker`, and does not t
 ## What it does
 
 - Monitors router availability.
-- Exposes WAN state and WAN IP.
+- Exposes WAN state, WAN IP, WAN RX counter, and WAN TX counter.
 - Exposes OpenConnect state and OpenConnect IP.
 - Exposes `passwall2`, `xray`, and `dnsmasq` running state.
-- Exposes hostname, version, kernel, model, uptime, load, and available memory.
+- Exposes hostname, version, kernel, model, human-readable uptime, CPU usage, memory utilization, load averages as diagnostics, and available memory as diagnostics.
 - Provides buttons to restart `passwall2`, restart `dnsmasq`, reload `firewall`, restart OpenConnect, and reboot OpenWrt.
 
 ## What it does not do
@@ -52,14 +52,21 @@ Install them on OpenWrt:
 
 ```sh
 ssh <router-admin>@<router-host>
-install -m 0755 /tmp/openwrt-ha /usr/libexec/rpcd/openwrt.ha
-install -m 0644 /tmp/openwrt-ha.json /usr/share/rpcd/acl.d/openwrt-ha.json
+
+cp /tmp/openwrt-ha /usr/libexec/rpcd/openwrt.ha
+chmod 0755 /usr/libexec/rpcd/openwrt.ha
+
+cp /tmp/openwrt-ha.json /usr/share/rpcd/acl.d/openwrt-ha.json
+chmod 0644 /usr/share/rpcd/acl.d/openwrt-ha.json
+
+/etc/init.d/rpcd restart
 ```
 
 Important:
 
 - The repository file is named `openwrt-ha`.
 - It must be installed as `/usr/libexec/rpcd/openwrt.ha` so the ubus object name becomes `openwrt.ha`.
+- Some minimal OpenWrt images do not have the `install` command, so the documented installation uses `cp` and `chmod`.
 
 ## Configure the OpenConnect interface on OpenWrt
 
@@ -69,19 +76,27 @@ Create `/etc/openwrt-ha.conf` manually:
 cat >/etc/openwrt-ha.conf <<'EOF'
 OPENCONNECT_INTERFACE="vpn"
 EOF
+
+/etc/init.d/rpcd restart
 ```
 
-If your OpenWrt logical OpenConnect interface is named differently, set that name instead:
+`OPENCONNECT_INTERFACE` is the logical OpenWrt network interface name from `/etc/config/network`.
+
+You can check available logical interface names with:
+
+```sh
+uci show network | grep '=interface'
+```
+
+If the logical interface is named `myvpn`, then `/etc/openwrt-ha.conf` must contain:
 
 ```sh
 OPENCONNECT_INTERFACE="myvpn"
 ```
 
-Then restart `rpcd`:
+The same value must also be entered in the Home Assistant `openconnect_interface` field.
 
-```sh
-/etc/init.d/rpcd restart
-```
+This integration does not create, rename, or modify OpenWrt interfaces.
 
 ## Create a dedicated `/ubus` user
 
@@ -101,6 +116,8 @@ uci commit rpcd
 /etc/init.d/rpcd restart
 /etc/init.d/uhttpd restart
 ```
+
+If your OpenWrt image does not include `adduser`, create the user manually with appropriate `/etc/passwd`, `/etc/shadow`, and `/etc/group` entries, then set the password with `passwd`.
 
 Check login manually:
 
@@ -153,20 +170,28 @@ Binary sensors:
 - `binary_sensor.openwrt_xray_running`
 - `binary_sensor.openwrt_dnsmasq_running`
 
-Sensors:
+Visible sensors:
 
 - `sensor.openwrt_hostname`
 - `sensor.openwrt_version`
 - `sensor.openwrt_kernel`
 - `sensor.openwrt_model`
 - `sensor.openwrt_uptime`
+- `sensor.openwrt_cpu_usage`
+- `sensor.openwrt_memory_used_percent`
+- `sensor.openwrt_lan_ip`
+- `sensor.openwrt_wan_ip`
+- `sensor.openwrt_wan_rx`
+- `sensor.openwrt_wan_tx`
+- `sensor.openwrt_openconnect_ip`
+
+Diagnostic sensors disabled by default:
+
+- `sensor.openwrt_uptime_seconds`
 - `sensor.openwrt_load_1m`
 - `sensor.openwrt_load_5m`
 - `sensor.openwrt_load_15m`
 - `sensor.openwrt_memory_available`
-- `sensor.openwrt_lan_ip`
-- `sensor.openwrt_wan_ip`
-- `sensor.openwrt_openconnect_ip`
 
 Buttons:
 
@@ -177,6 +202,13 @@ Buttons:
 - `button.openwrt_reboot`
 
 The reboot button remains a separate entity and is disabled by default in the entity registry because it is inherently risky. It is safer to call it through a Home Assistant script with confirmation.
+
+## Data notes
+
+- Memory is exposed as used percentage: `(1 - available / total) * 100`.
+- CPU usage is calculated from two `/proc/stat` samples. Load average is kept only as diagnostic data and is not labeled as CPU usage.
+- Uptime is shown as a human-readable string. Raw uptime seconds are kept as a disabled diagnostic sensor.
+- WAN RX/TX are byte counters read from `/sys/class/net/<wan-device>/statistics/rx_bytes` and `tx_bytes`. Home Assistant can render them as MiB/GiB when the data size device class is used.
 
 ## Expected ubus methods
 
@@ -195,8 +227,6 @@ You should see:
 - `restart_openconnect`
 - `reboot`
 
-The deprecated alias `restart_vds_openconnect` may also appear for backward compatibility, but new setups should use `restart_openconnect`.
-
 ## Expected status payload
 
 Run:
@@ -207,11 +237,16 @@ ubus call openwrt.ha status
 
 The response should include:
 
-- `system.load` as an array of 3 numbers
+- `system.cpu.usage_percent`
+- `system.memory.total`
+- `system.memory.available`
 - `interfaces.lan.up`
 - `interfaces.wan.up`
+- `interfaces.wan.rx_bytes`
+- `interfaces.wan.tx_bytes`
 - `interfaces.openconnect.name`
 - `interfaces.openconnect.up`
+- `interfaces.openconnect.ipv4`
 - `services.passwall2.running`
 - `services.xray.running`
 - `services.dnsmasq.running`
@@ -220,12 +255,28 @@ Example shape:
 
 ```json
 {
+  "system": {
+    "cpu": {
+      "usage_percent": 12.4
+    },
+    "memory": {
+      "total": 1027645440,
+      "available": 891256832
+    }
+  },
   "interfaces": {
+    "wan": {
+      "up": true,
+      "device": "eth1",
+      "ipv4": "203.0.113.10",
+      "rx_bytes": 123456789,
+      "tx_bytes": 987654321
+    },
     "openconnect": {
       "name": "vpn",
       "up": true,
       "device": "vpn-vpn",
-      "ipv4": "<openconnect-ip>"
+      "ipv4": "192.0.2.10"
     }
   }
 }
