@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5 - 2026-04-23
+
+### Added
+
+- Added a local Home Assistant brand icon for the custom integration in `custom_components/openwrt_control/brand/icon.png`.
+
 ## 0.2.4 - 2026-04-22
 
 ### Fixed
