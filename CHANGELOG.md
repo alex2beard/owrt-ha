@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.6 - 2026-04-23
+
+### Fixed
+
+- Replaced the incorrect local integration icon with the approved image.
+- Added matching root HACS brand assets in `brand/icon.png` and `brand/logo.png`.
+- Added `custom_components/openwrt_control/brand/logo.png` so Home Assistant and HACS use the same approved branding.
+
 ## 0.2.5 - 2026-04-23
 
 ### Added
