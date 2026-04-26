@@ -141,12 +141,7 @@ SENSOR_DESCRIPTIONS: tuple[OpenWrtSensorEntityDescription, ...] = (
     OpenWrtSensorEntityDescription(
         key="cpu_usage",
         translation_key="cpu_usage",
-        value_fn=lambda data, language: _get_path(
-            data,
-            "system",
-            "cpu",
-            "usage_percent",
-        ),
+        value_fn=lambda data, language: _get_path(data, "system", "cpu", "usage_percent"),
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -203,6 +198,64 @@ SENSOR_DESCRIPTIONS: tuple[OpenWrtSensorEntityDescription, ...] = (
         icon="mdi:memory",
     ),
     OpenWrtSensorEntityDescription(
+        key="rootfs_used_percent",
+        translation_key="rootfs_used_percent",
+        value_fn=lambda data, language: _get_path(data, "system", "rootfs", "used_percent"),
+        native_unit_of_measurement="%",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        icon="mdi:harddisk",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="rootfs_free",
+        translation_key="rootfs_free",
+        value_fn=lambda data, language: _get_path(data, "system", "rootfs", "free_bytes"),
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:harddisk",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="rootfs_total",
+        translation_key="rootfs_total",
+        value_fn=lambda data, language: _get_path(data, "system", "rootfs", "total_bytes"),
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:harddisk",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="conntrack_used_percent",
+        translation_key="conntrack_used_percent",
+        value_fn=lambda data, language: _get_path(data, "system", "conntrack", "used_percent"),
+        native_unit_of_measurement="%",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        icon="mdi:connection",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="conntrack_count",
+        translation_key="conntrack_count",
+        value_fn=lambda data, language: _get_path(data, "system", "conntrack", "count"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:connection",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="conntrack_max",
+        translation_key="conntrack_max",
+        value_fn=lambda data, language: _get_path(data, "system", "conntrack", "max"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:connection",
+    ),
+    OpenWrtSensorEntityDescription(
         key="lan_ip",
         translation_key="lan_ip",
         value_fn=lambda data, language: _get_path(data, "interfaces", "lan", "ipv4"),
@@ -255,6 +308,51 @@ SENSOR_DESCRIPTIONS: tuple[OpenWrtSensorEntityDescription, ...] = (
         icon="mdi:upload-network-outline",
     ),
     OpenWrtSensorEntityDescription(
+        key="wan_mtu",
+        translation_key="wan_mtu",
+        value_fn=lambda data, language: _get_path(data, "interfaces", "wan", "mtu"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:ethernet",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="wan_rx_errors",
+        translation_key="wan_rx_errors",
+        value_fn=lambda data, language: _get_path(data, "interfaces", "wan", "rx_errors"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:alert-circle-outline",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="wan_tx_errors",
+        translation_key="wan_tx_errors",
+        value_fn=lambda data, language: _get_path(data, "interfaces", "wan", "tx_errors"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:alert-circle-outline",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="wan_rx_dropped",
+        translation_key="wan_rx_dropped",
+        value_fn=lambda data, language: _get_path(data, "interfaces", "wan", "rx_dropped"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:packet-remove",
+    ),
+    OpenWrtSensorEntityDescription(
+        key="wan_tx_dropped",
+        translation_key="wan_tx_dropped",
+        value_fn=lambda data, language: _get_path(data, "interfaces", "wan", "tx_dropped"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:packet-remove",
+    ),
+    OpenWrtSensorEntityDescription(
         key="openconnect_ip",
         translation_key="openconnect_ip",
         value_fn=lambda data, language: _get_path(data, "interfaces", "openconnect", "ipv4"),
@@ -288,6 +386,7 @@ class OpenWrtEntity(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the base entity."""
         super().__init__(runtime_data.coordinator)
+        self._runtime_data = runtime_data
         self._entry = entry
 
     @property
@@ -301,6 +400,7 @@ class OpenWrtEntity(CoordinatorEntity, SensorEntity):
             model=_get_path(data, "system", "model"),
             sw_version=_get_path(data, "system", "version"),
             hw_version=_get_path(data, "system", "kernel"),
+            configuration_url=self._runtime_data.client.configuration_url,
         )
 
     @property

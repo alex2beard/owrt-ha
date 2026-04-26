@@ -4,7 +4,7 @@
 
 [ -r /etc/openwrt-ha.conf ] && . /etc/openwrt-ha.conf
 
-PLUGIN_VERSION="0.2.4"
+PLUGIN_VERSION="0.3.0"
 SERVICE_OPENCONNECT="${OPENCONNECT_INTERFACE:-vpn}"
 WAN_RATE_STATE_FILE="/tmp/openwrt-ha-wan-rate"
 
@@ -38,15 +38,59 @@ safe_json() {
     "$@" 2>/dev/null || printf '{}'
 }
 
-read_uint_file() {
+read_int_file() {
     local path="$1"
 
     [ -r "$path" ] || {
+        printf ''
+        return
+    }
+
+    awk 'NR == 1 { value=$1 + 0; printf "%.0f", value; exit }' "$path" 2>/dev/null || printf ''
+}
+
+read_uint_file() {
+    local path="$1"
+    local value
+
+    value="$(read_int_file "$path")"
+    [ -n "$value" ] || {
         printf '0'
         return
     }
 
-    awk 'NR == 1 { value=$1 + 0; printf "%.0f", value; exit }' "$path" 2>/dev/null || printf '0'
+    awk -v value="$value" 'BEGIN { if (value < 0) value = 0; printf "%.0f", value }'
+}
+
+kb_to_bytes() {
+    local value="${1:-0}"
+
+    awk -v value="$value" 'BEGIN { if (value < 0) value = 0; printf "%.0f", value * 1024 }'
+}
+
+percent() {
+    local current="$1"
+    local maximum="$2"
+
+    awk -v current="$current" -v maximum="$maximum" 'BEGIN {
+        if (maximum <= 0) {
+            printf "%.1f", 0
+            exit
+        }
+        value = current / maximum * 100
+        if (value < 0) value = 0
+        if (value > 100) value = 100
+        printf "%.1f", value
+    }'
+}
+
+json_add_non_negative_int() {
+    local key="$1"
+    local value="$2"
+
+    [ -n "$value" ] || return
+    [ "$value" -ge 0 ] 2>/dev/null || return
+    json_add_int "$key" "$value"
 }
 
 calculate_rate_mbps() {
@@ -116,12 +160,8 @@ cpu_usage_percent() {
             }
 
             usage = (1 - idle_delta / total_delta) * 100
-            if (usage < 0) {
-                usage = 0
-            }
-            if (usage > 100) {
-                usage = 100
-            }
+            if (usage < 0) usage = 0
+            if (usage > 100) usage = 100
             printf "%.1f", usage
         }'
 }
@@ -150,6 +190,9 @@ add_wan_statistics() {
     local seconds
     local rx_mbps
     local tx_mbps
+    local carrier
+    local speed_mbps
+    local mtu
 
     rx_bytes="$(read_uint_file "/sys/class/net/${device}/statistics/rx_bytes")"
     tx_bytes="$(read_uint_file "/sys/class/net/${device}/statistics/tx_bytes")"
@@ -175,6 +218,22 @@ add_wan_statistics() {
     json_add_int "tx_bytes" "$tx_bytes"
     json_add_double "rx_mbps" "$rx_mbps"
     json_add_double "tx_mbps" "$tx_mbps"
+
+    carrier="$(read_int_file "/sys/class/net/${device}/carrier")"
+    if [ -n "$carrier" ]; then
+        [ "$carrier" = "1" ] && json_add_boolean "carrier" "1" || json_add_boolean "carrier" "0"
+    fi
+
+    speed_mbps="$(read_int_file "/sys/class/net/${device}/speed")"
+    json_add_non_negative_int "speed_mbps" "$speed_mbps"
+
+    mtu="$(read_uint_file "/sys/class/net/${device}/mtu")"
+    json_add_int "mtu" "$mtu"
+
+    json_add_int "rx_errors" "$(read_uint_file "/sys/class/net/${device}/statistics/rx_errors")"
+    json_add_int "tx_errors" "$(read_uint_file "/sys/class/net/${device}/statistics/tx_errors")"
+    json_add_int "rx_dropped" "$(read_uint_file "/sys/class/net/${device}/statistics/rx_dropped")"
+    json_add_int "tx_dropped" "$(read_uint_file "/sys/class/net/${device}/statistics/tx_dropped")"
 }
 
 add_interface_object() {
@@ -223,6 +282,12 @@ render_status() {
     local mem_buffered
     local mem_cached
     local cpu_usage
+    local root_total
+    local root_free
+    local root_used
+    local root_avail
+    local conntrack_count
+    local conntrack_max
 
     board_json="$(safe_json ubus call system board)"
     info_json="$(safe_json ubus call system info)"
@@ -244,10 +309,28 @@ render_status() {
     mem_buffered="$(json_get "$info_json" '@.memory.buffered')"
     mem_cached="$(json_get "$info_json" '@.memory.cached')"
 
-    [ -n "$uptime" ] || uptime=0
-    [ -n "$mem_total" ] || mem_total=0
-    [ -n "$mem_free" ] || mem_free=0
-    [ -n "$mem_available" ] || mem_available=$(( ${mem_free:-0} + ${mem_buffered:-0} + ${mem_cached:-0} ))
+    root_total="$(json_get "$info_json" '@.root.total')"
+    root_free="$(json_get "$info_json" '@.root.free')"
+    root_used="$(json_get "$info_json" '@.root.used')"
+    root_avail="$(json_get "$info_json" '@.root.avail')"
+
+    conntrack_count="$(read_uint_file /proc/sys/net/netfilter/nf_conntrack_count)"
+    conntrack_max="$(read_uint_file /proc/sys/net/netfilter/nf_conntrack_max)"
+
+    uptime="${uptime:-0}"
+    mem_total="${mem_total:-0}"
+    mem_free="${mem_free:-0}"
+    mem_buffered="${mem_buffered:-0}"
+    mem_cached="${mem_cached:-0}"
+    if [ -z "$mem_available" ]; then
+        mem_available=$(( mem_free + mem_buffered + mem_cached ))
+    fi
+    root_total="${root_total:-0}"
+    root_free="${root_free:-0}"
+    root_used="${root_used:-0}"
+    root_avail="${root_avail:-$root_free}"
+    conntrack_count="${conntrack_count:-0}"
+    conntrack_max="${conntrack_max:-0}"
 
     json_init
 
@@ -273,6 +356,18 @@ render_status() {
     json_add_int "total" "$mem_total"
     json_add_int "free" "$mem_free"
     json_add_int "available" "$mem_available"
+    json_close_object
+    json_add_object "rootfs"
+    json_add_int "total_bytes" "$(kb_to_bytes "$root_total")"
+    json_add_int "free_bytes" "$(kb_to_bytes "$root_free")"
+    json_add_int "used_bytes" "$(kb_to_bytes "$root_used")"
+    json_add_int "available_bytes" "$(kb_to_bytes "$root_avail")"
+    json_add_double "used_percent" "$(percent "$root_used" "$root_total")"
+    json_close_object
+    json_add_object "conntrack"
+    json_add_int "count" "$conntrack_count"
+    json_add_int "max" "$conntrack_max"
+    json_add_double "used_percent" "$(percent "$conntrack_count" "$conntrack_max")"
     json_close_object
     json_close_object
 

@@ -131,6 +131,7 @@ class OpenWrtButton(CoordinatorEntity, ButtonEntity):
             model=_get_path(data, "system", "model"),
             sw_version=_get_path(data, "system", "version"),
             hw_version=_get_path(data, "system", "kernel"),
+            configuration_url=self._runtime_data.client.configuration_url,
         )
 
     @property

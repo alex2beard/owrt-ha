@@ -57,6 +57,9 @@
       "wan_up": {
         "name": "WAN up"
       },
+      "wan_carrier": {
+        "name": "WAN carrier"
+      },
       "openconnect_up": {
         "name": "OpenConnect up"
       },
@@ -110,6 +113,24 @@
       "memory_available": {
         "name": "Memory available"
       },
+      "rootfs_used_percent": {
+        "name": "Root filesystem used"
+      },
+      "rootfs_free": {
+        "name": "Root filesystem free"
+      },
+      "rootfs_total": {
+        "name": "Root filesystem total"
+      },
+      "conntrack_used_percent": {
+        "name": "Conntrack used"
+      },
+      "conntrack_count": {
+        "name": "Conntrack connections"
+      },
+      "conntrack_max": {
+        "name": "Conntrack maximum"
+      },
       "lan_ip": {
         "name": "LAN IP"
       },
@@ -127,6 +148,21 @@
       },
       "wan_tx": {
         "name": "WAN TX bytes"
+      },
+      "wan_mtu": {
+        "name": "WAN MTU"
+      },
+      "wan_rx_errors": {
+        "name": "WAN RX errors"
+      },
+      "wan_tx_errors": {
+        "name": "WAN TX errors"
+      },
+      "wan_rx_dropped": {
+        "name": "WAN RX dropped"
+      },
+      "wan_tx_dropped": {
+        "name": "WAN TX dropped"
       },
       "openconnect_ip": {
         "name": "OpenConnect IP"
