@@ -31,7 +31,7 @@ normalize_bool() {
 normalize_load() {
     local raw="${1:-0}"
 
-    awk -v value="$raw" 'BEGIN { printf ".6f", value / 65536 }'
+    awk -v value="$raw" 'BEGIN { printf "%.6f", value / 65536 }'
 }
 
 safe_json() {
@@ -74,7 +74,7 @@ percent() {
 
     awk -v current="$current" -v maximum="$maximum" 'BEGIN {
         if (maximum <= 0) {
-            printf ".1f", 0
+            printf "%.1f", 0
             exit
         }
         value = current / maximum * 100
@@ -160,12 +160,8 @@ cpu_usage_percent() {
             }
 
             usage = (1 - idle_delta / total_delta) * 100
-            if (usage < 0) {
-                usage = 0
-            }
-            if (usage > 100) {
-                usage = 100
-            }
+            if (usage < 0) usage = 0
+            if (usage > 100) usage = 100
             printf "%.1f", usage
         }'
 }
@@ -321,14 +317,20 @@ render_status() {
     conntrack_count="$(read_uint_file /proc/sys/net/netfilter/nf_conntrack_count)"
     conntrack_max="$(read_uint_file /proc/sys/net/netfilter/nf_conntrack_max)"
 
-    [ -n "$uptime" ] || uptime=0
-    [ -n "$mem_total" ] || mem_total=0
-    [ -n "$mem_free" ] || mem_free=0
-    [ -n "$mem_available" ] || mem_available=$(( ${mem_free:-0} + ${mem_buffered:-{0} + ${mem_cached:-0} ))
-    [ -n "$root_total" ] ||(root_total=0)
-    [ -n "$root_free" ] || root_free=0
-    [ -n "$root_used" ] || root_used=0
-    [ -n "$root_avail" ] ||(root_avail="$root_free")
+    uptime="${uptime:-0}"
+    mem_total="${mem_total:-0}"
+    mem_free="${mem_free:-0}"
+    mem_buffered="${mem_buffered:-0}"
+    mem_cached="${mem_cached:-0}"
+    if [ -z "$mem_available" ]; then
+        mem_available=$(( mem_free + mem_buffered + mem_cached ))
+    fi
+    root_total="${root_total:-0}"
+    root_free="${root_free:-0}"
+    root_used="${root_used:-0}"
+    root_avail="${root_avail:-$root_free}"
+    conntrack_count="${conntrack_count:-0}"
+    conntrack_max="${conntrack_max:-0}"
 
     json_init
 
