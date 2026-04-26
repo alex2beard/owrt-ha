@@ -54,10 +54,20 @@ class OpenWrtClient:
         self._lock = asyncio.Lock()
 
     @property
+    def base_url(self) -> str:
+        """Return the OpenWrt base URL."""
+        scheme = "https" if self._use_https else "http"
+        return f"{scheme}://{self._host}:{self._port}"
+
+    @property
     def endpoint(self) -> str:
         """Return the ubus endpoint URL."""
-        scheme = "https" if self._use_https else "http"
-        return f"{scheme}://{self._host}:{self._port}/ubus"
+        return f"{self.base_url}/ubus"
+
+    @property
+    def configuration_url(self) -> str:
+        """Return the LuCI configuration URL for Home Assistant device info."""
+        return f"{self.base_url}/cgi-bin/luci"
 
     @property
     def openconnect_interface(self) -> str:
