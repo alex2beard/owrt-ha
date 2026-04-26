@@ -57,6 +57,9 @@
       "wan_up": {
         "name": "WAN доступен"
       },
+      "wan_carrier": {
+        "name": "WAN carrier"
+      },
       "openconnect_up": {
         "name": "OpenConnect доступен"
       },
@@ -110,6 +113,24 @@
       "memory_available": {
         "name": "Доступная память"
       },
+      "rootfs_used_percent": {
+        "name": "Использование rootfs"
+      },
+      "rootfs_free": {
+        "name": "Свободно rootfs"
+      },
+      "rootfs_total": {
+        "name": "Всего rootfs"
+      },
+      "conntrack_used_percent": {
+        "name": "Использование conntrack"
+      },
+      "conntrack_count": {
+        "name": "Conntrack соединения"
+      },
+      "conntrack_max": {
+        "name": "Conntrack максимум"
+      },
       "lan_ip": {
         "name": "LAN IP"
       },
@@ -127,6 +148,21 @@
       },
       "wan_tx": {
         "name": "WAN TX байты"
+      },
+      "wan_mtu": {
+        "name": "WAN MTU"
+      },
+      "wan_rx_errors": {
+        "name": "WAN RX ошибки"
+      },
+      "wan_tx_errors": {
+        "name": "WAN TX ошибки"
+      },
+      "wan_rx_dropped": {
+        "name": "WAN RX отброшено"
+      },
+      "wan_tx_dropped": {
+        "name": "WAN TX отброшено"
       },
       "openconnect_ip": {
         "name": "OpenConnect IP"
