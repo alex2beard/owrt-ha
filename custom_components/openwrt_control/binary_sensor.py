@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,6 +37,7 @@ class OpenWrtBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe an OpenWrt binary sensor."""
 
     value_fn: Callable[[dict[str, Any], bool], bool]
+    enabled_by_default: bool = True
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[OpenWrtBinarySensorEntityDescription, ...] = (
@@ -52,6 +54,17 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenWrtBinarySensorEntityDescription, ...] = (
         value_fn=lambda data, _is_online: bool(_get_path(data, "interfaces", "wan", "up")),
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         icon="mdi:web-check",
+    ),
+    OpenWrtBinarySensorEntityDescription(
+        key="wan_carrier",
+        translation_key="wan_carrier",
+        value_fn=lambda data, _is_online: bool(
+            _get_path(data, "interfaces", "wan", "carrier")
+        ),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_by_default=False,
+        icon="mdi:ethernet",
     ),
     OpenWrtBinarySensorEntityDescription(
         key="openconnect_up",
@@ -102,6 +115,7 @@ class OpenWrtEntity(CoordinatorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the base entity."""
         super().__init__(runtime_data.coordinator)
+        self._runtime_data = runtime_data
         self._entry = entry
 
     @property
@@ -115,6 +129,7 @@ class OpenWrtEntity(CoordinatorEntity, BinarySensorEntity):
             model=_get_path(data, "system", "model"),
             sw_version=_get_path(data, "system", "version"),
             hw_version=_get_path(data, "system", "kernel"),
+            configuration_url=self._runtime_data.client.configuration_url,
         )
 
     @property
@@ -166,6 +181,7 @@ class OpenWrtBinarySensor(OpenWrtEntity):
         super().__init__(runtime_data, entry)
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_entity_registry_enabled_default = description.enabled_by_default
 
     @property
     def is_on(self) -> bool:
