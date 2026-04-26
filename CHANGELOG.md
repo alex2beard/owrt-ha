@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0 - 2026-04-26
+
+### Added
+
+- Added OpenWrt-side WAN diagnostics to `openwrt.ha status`: carrier, MTU, RX/TX errors, RX/TX dropped counters.
+- Added OpenWrt-side system diagnostics to `openwrt.ha status`: root filesystem usage and conntrack usage.
+- Added Home Assistant diagnostic sensors for WAN MTU, WAN errors, WAN dropped counters, root filesystem free/total, conntrack count, and conntrack maximum.
+- Added visible Home Assistant sensors for root filesystem used percent and conntrack used percent.
+- Added a disabled-by-default diagnostic binary sensor for WAN carrier.
+- Added LuCI `configuration_url` to Home Assistant device info.
+
+### Changed
+
+- Bumped the OpenWrt-side rpcd plugin version to `0.3.0`.
+- Kept existing WAN RX/TX rate and byte sensors unchanged to avoid duplicate traffic sensors.
+
+### Not included
+
+- Temperature sensors are intentionally not added because the current OpenWrt instance runs as a virtual machine.
+- WAN link speed sensor is intentionally not added because the current virtual WAN interface reports `speed = -1`.
+
 ## 0.2.5 - 2026-04-23
 
 ### Added
